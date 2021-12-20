@@ -33,8 +33,8 @@ def get_download_path():
 class get_projections():
     
     def __init__(self):
-        self.as_user = 'wolfjb1'
-        self.as_pword = 'Waffles1'
+        self.as_user = #your username
+        self.as_pword = #your password
         self.batx_urls = ["https://rotogrinders.com/grids/standard-projections-the-bat-x-3372510.csv?site=draftkings", \
                           'https://rotogrinders.com/grids/standard-projections-the-bat-x-hitters-3372512.csv?site=draftkings']
         self.spoof_headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'}

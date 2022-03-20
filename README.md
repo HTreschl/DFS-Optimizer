@@ -18,3 +18,9 @@ Optimize using the projection set we want, in this case averages of all availabl
 lineup = model.standard_optimizer(df, objective_fn_column='avg fpts')
 print(lineup)
 ```
+
+Returns a list of players in the lineup, in this case 
+
+'''
+['Curtis Samuel', 'Davante Adams', 'David Montgomery', 'Deebo Samuel', 'Derrick Henry', 'Josh Allen', 'Lions', 'Mike Davis', 'Will Dissly']
+'''

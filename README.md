@@ -23,3 +23,6 @@ Returns a list of players in the lineup, in this case
 
 ['Curtis Samuel', 'Davante Adams', 'David Montgomery', 'Deebo Samuel', 'Derrick Henry', 'Josh Allen', 'Lions', 'Mike Davis', 'Will Dissly']
 
+# Running Sims
+
+the runSims module adds functionality simulate results from each player and provide an optimal ownership calculation. Players' point predictions are sampled from a normal distribution centered on their fantasy point projection and with a 95% CI from 0 to 2x their projected points. Returns optimal ownership and leverage, where optimal ownership is the percentage of simulations in which the player was in the optimal lineup, and leverage is the difference between optimal ownership and projected ownership.

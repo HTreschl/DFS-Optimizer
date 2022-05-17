@@ -41,16 +41,7 @@ def standard_sims(df, sport, count, fpts_col_name='Fpts'):
     #calculations
     df['Optimal Ownership'] = (df['Count']/count)*100
     df['Leverage'] = df['Optimal Ownership'] - df['Pown']
-    '''
-    
-    #add way to see most frequent pairings (all players by all other players, do counts)
-    pairings = pd.DataFrame(np.zeros((len(set(player_list)), len(set(player_list)))), columns=list(set(player_list)), index = list(set(player_list)))
-    for lineup in lineup_list:
-        for player_1 in lineup:
-            for player_2 in lineup:
-                if player_1 != player_2:
-                    pairings.loc[player_1, player_2] += 1
-    '''        
+ 
     #filter and sort
     df = df[['Name','Position','Team','Opp','Salary','Fpts','Pown','Leverage','Optimal Ownership']]
     df = df.sort_values(by = ['Position','Leverage'], ascending = False).set_index('Name')

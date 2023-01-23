@@ -1,6 +1,6 @@
 # DFS Optimizer
 
-A library designed to run sims and optimize lineups for DFS using python's pulp module. Includes NFL and MLB.
+A library designed to run sims and optimize lineups for DFS using python's pulp module. Includes NFL and MLB. Implemented in a webapp at https://roster-tech.streamlit.app/
 
 # NFL Example -- Single Optimized Lineup for a Classic Game-Type
 Optimize a single lineup without running any sims using the example projections for a classic dfs game

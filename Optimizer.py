@@ -188,15 +188,15 @@ class NFL():
         slns = [x.name[8:].replace('_',' ') for x in prob.variables() if x.varValue == 1]
         return slns
     
-    def showdown_optimizer(self, df):
+    def showdown_optimizer(self, df, objective_fn_column = 'avg fpts'):
         '''returns the optimal lineup for a showdown slate
         columns = Name, Salary, avg fpts'''
         
         #df = pd.read_csv('showdown test.csv')
         
         #initial cleanup
-        df = df[df['avg fpts'].isnull() == False]
-        df = df[df['avg fpts']!=0]
+        df = df[df[objective_fn_column].isnull() == False]
+        df = df[df[objective_fn_column]!=0]
         
         #get player dummies to dedupe captain
         df = df.merge(pd.get_dummies(df['Name']), how='inner', left_index=True, right_index=True)
@@ -209,7 +209,7 @@ class NFL():
         cpt_df = cpt_df.set_index('Name')
         cpt_df['is cpt'] = 1
         cpt_df['Salary'] = cpt_df['Salary'] *1.5
-        cpt_df['avg fpts'] = cpt_df['avg fpts'] *1.5
+        cpt_df[objective_fn_column] = cpt_df[objective_fn_column] *1.5
         df = cpt_df.append(df)
         df['is cpt'] = df['is cpt'].fillna(0)
         
@@ -232,73 +232,51 @@ class NFL():
         prob += pulp.lpSum([df['Salary'][f]*lineup[f] for f in df.index]) <= 50000
         
         #add objective function
-        prob.setObjective(pulp.lpSum([df['avg fpts'][f]*lineup[f] for f in df.index]))
+        prob.setObjective(pulp.lpSum([df[objective_fn_column][f]*lineup[f] for f in df.index]))
         
         prob.solve(self.solver)
         slns = [x.name[8:].replace('_',' ') for x in prob.variables() if x.varValue == 1]
         return slns
     
-    def fpts_scrambler(self, team_corr = True, passer_corr = True):
-        df = self.df
+    def player_constrained_standard_optimizer(self, df, objective_fn_column = 'avg fpts', required_players = []):
+        '''returns the top lineup from the given dataframe for the standard contest type
+        Columns = Name, Salary, Pos, Team, avg fpts'''
+
         
-        #fill missing floor/ceil values
-        df['avg floor'] = df['avg floor'].fillna(df['avg fpts'] * .5)
-        df['avg ceil'] = df['avg ceil'].fillna(df['avg fpts'] * 1.5)
+        #initial cleanup; get dummy variables for positions and drop nulls in target column
+        pos_dummies = pd.get_dummies(df['Pos'])
+        df = df.merge(pos_dummies,how='inner', left_index=True, right_index = True)
+        player_dummies = pd.get_dummies(df['Name'])
+        df = df.merge(player_dummies, how = 'inner', left_index = True, right_index = True)
+        df = df[df[objective_fn_column].isnull() == False]
         
-        #get observed results for teams -> correlates player results on teams (needs to be fixed)
-        if team_corr == True:
-            teams = df[['Team']].drop_duplicates()
-            teams['Team Observed'] = np.random.normal(0,0.25,len(teams))
-            df = df.merge(teams, how='left', on='Team')
-        else:
-            df['Team Observed'] = 0
+        #define the problem
+        prob = pulp.LpProblem('NFL', pulp.LpMaximize)
         
-        #create baseline results for players
-        df['Player Observed'] = np.random.gamma(2,0.5, len(df))
+        #create lineup list
+        lineup = pulp.LpVariable.dicts('players',df.index, cat='Binary')
         
+        #add max player constraint
+        prob += pulp.lpSum([lineup[i] for i in df.index]) == 9
         
-        #add correlation for QBs and receivers
-        if passer_corr == True:
-            qb_results = df[df['Pos']=='QB'][['Team', 'Player Observed']].groupby('Team').mean()
-            qb_results['rec adjuster'] = qb_results['Player Observed']*.25
-            df = df.merge(qb_results.drop(columns='Player Observed'), how='left', on ='Team')
-            df['Player Observed'] = np.where((df['Pos'] == 'WR') | (df['Pos']=='TE'), 
-                                           df['Player Observed']+df['rec adjuster'], 
-                                           df['Player Observed'])
+        #add position contraints
+        prob += pulp.lpSum([df['QB'][f]*lineup[f] for f in df.index]) == 1
+        prob += pulp.lpSum([df['RB'][f]*lineup[f] for f in df.index]) >= 2
+        prob += pulp.lpSum([df['WR'][f]*lineup[f] for f in df.index]) >= 3
+        prob += pulp.lpSum([df['TE'][f]*lineup[f] for f in df.index]) >= 1
+        prob += pulp.lpSum([df['DST'][f]*lineup[f] for f in df.index]) == 1
         
-        #convert into fpts by creating a ceil scaler and floor scaler that converts each .01 of observed to an fpts value
-        df['adjust amount'] = np.where(df['Player Observed']<=0, \
-                                 (df['avg fpts']-df['avg floor'])*df['Player Observed'], \
-                                 (df['avg ceil'] - df['avg fpts'])*df['Player Observed'])
-        df['observed fpts'] = df['avg fpts'] + df['adjust amount']
-        #clean
-        df.loc[df['observed fpts'] < 0, 'observed fpts'] = 0
-        df = df.drop(columns = ['avg fpts'])
-        return df
+        #add individual player constraints
+        for player in required_players:
+            prob += pulp.lpSum([df[player][f]*lineup[f] for f in df.index]) == 1
         
+        #add salary constraint
+        prob += pulp.lpSum([df['Salary'][f]*lineup[f] for f in df.index]) <= 50000
         
+        #add objective function
+        prob.setObjective(pulp.lpSum([df[objective_fn_column][f]*lineup[f] for f in df.index]))
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+        prob.solve(self.solver)
+        slns = [x.name[8:].replace('_',' ') for x in prob.variables() if x.varValue == 1]
+        return slns
     

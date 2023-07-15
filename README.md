@@ -8,6 +8,7 @@ Optimize a single lineup without running any sims using the example projections 
 Import the data and initialize the NFL optimizer
 
 ```
+import Optimizer as opt
 df = pd.read_excel('NFL DK Projections.xlsx')
 model = opt.NFL(df=df)
 ```

@@ -28,29 +28,32 @@ class sims():
         
         df = df.drop_duplicates(subset = ['Name','Team',fpts_col_name])
         df = self.optimizer.prep_df()
-          
+
+        #run sims
         inputs = [(df, fpts_col_name,ceil_column,floor_column,'Observed Fpts',stack)] * count
         with concurrent.futures.ThreadPoolExecutor(max_workers = 3) as e:
             lineup_list = list(e.map(self.scramble_and_optimize,inputs))
-            
+
+        #format output
         observed_scores = [x[1] for x in lineup_list]
         lineup_list = [x[0] for x in lineup_list]
-        
         player_list = []
         for lineup in lineup_list:
             for player in lineup:
                 player_list.append(player)
-                
+
+        #add results to dataframe
         counts = pd.DataFrame(player_list, columns = ['Name','Position','Team']).value_counts()
         counts = pd.DataFrame(counts).rename(columns = {0 : 'count'}).reset_index()
-        
         df = df.merge(counts, how='left', on=['Name','Position','Team'])
+        
         #calculations
         df['Optimal Ownership'] = (df['count']/count)*100
         include_columns = ['Name','Position','Team','Opp','Salary','Optimal Ownership','Efficiency', fpts_col_name]
         if ownership_column is not None:
             df['Leverage'] = df['Optimal Ownership'] - df[ownership_column] 
             include_columns += [ownership_column, 'Leverage']
+            
         #filter and sort
         df = df[include_columns]
         df = df.sort_values(by = ['Position','Optimal Ownership'], ascending = False).set_index('Name')

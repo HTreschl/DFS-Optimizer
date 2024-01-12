@@ -29,6 +29,7 @@ Returns a list of players in the lineup, in this case
 the runSims module adds functionality to simulate results from each player and provide an optimal ownership calculation. Players' point predictions are sampled from a gamma distribution centered on their fantasy point projection and with a 95% CI between their floor and ceiling projections. Returns optimal ownership and leverage, where optimal ownership is the percentage of simulations in which the player was in the optimal lineup, and leverage is the difference between optimal ownership and projected ownership.
 
 To run sims, implement something like below:
+df returns a dataframe of each player and the number of times they were in the top-scoring lineup. lineups returns a raw list of each optimal lineup, which can be used to determine which players tend to group together.
 
 ```
 import Optimizer as opt
